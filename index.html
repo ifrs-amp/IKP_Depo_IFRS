@@ -37,8 +37,9 @@
   .grading select{flex:1}
   .chip{min-width:70px;text-align:center;padding:6px 10px;border-radius:3px;font-weight:700;
     font-size:12px;background:#e9ecef;color:#555}
-  .chip.Biru{background:#a7c7f2}.chip.Hijau{background:#b7e1a1}
-  .chip.Kuning{background:#fff2a8}.chip.Merah{background:#f4a6a6}
+  .chip.Extreme{background:#ff4d4d;color:#fff}.chip.High{background:#ffeb3b}
+  .chip.Moderate{background:#7fd17f}.chip.Low{background:#4d6dff;color:#fff}
+  .chip{min-width:150px}
   .bantuan{font-size:11px;color:#6b7280;margin-top:3px}
   .kaki{background:#f6f7f9;padding:14px 10px;border-top:1px solid #eceff2;margin-top:2px}
   button{font:inherit;font-size:12px;font-weight:700;background:var(--hijau);color:#fff;border:0;
@@ -129,9 +130,11 @@
         <div class="f"><label for="dampak">6. Dampak Insiden terhadap Pasien</label>
           <select id="dampak" name="dampak" required>
             <option value=""></option>
-            <option value="1">Tidak signifikan</option><option value="2">Minor</option>
-            <option value="3">Moderat</option><option value="4">Mayor</option>
-            <option value="5">Katastropik</option>
+            <option value="5">Kematian</option>
+            <option value="4">Cedera Irreversibel / Cedera Berat</option>
+            <option value="3">Cedera Reversibel / Cedera Sedang</option>
+            <option value="2">Cedera Ringan</option>
+            <option value="1">Tidak Ada Cedera</option>
           </select><div class="pesan-salah">Wajib dipilih</div></div>
 
         <div class="f"><label for="probabilitas">7. Probabilitas</label>
@@ -147,8 +150,11 @@
         <div class="f"><label for="grading">Grading</label>
           <div class="grading">
             <select id="grading" name="grading" required>
-              <option value=""></option><option>Biru</option><option>Hijau</option>
-              <option>Kuning</option><option>Merah</option>
+              <option value=""></option>
+              <option style="background:#ff0000">Extreme (Sangat Tinggi)</option>
+              <option style="background:#ffff00">High (Tinggi)</option>
+              <option style="background:#7fd17f">Moderate (Sedang)</option>
+              <option style="background:#4d6dff;color:#fff">Low (Rendah)</option>
             </select>
             <span id="chip" class="chip">–</span>
           </div>
@@ -219,17 +225,17 @@
   // Matriks sederhana skor = dampak x probabilitas. Sesuaikan dengan matriks grading RS Anda.
   function hitungGrading(d, p){
     const s = d * p;
-    if (s <= 3) return 'Biru';
-    if (s <= 6) return 'Hijau';
-    if (s <= 12) return 'Kuning';
-    return 'Merah';
+    if (s <= 3) return 'Low (Rendah)';
+    if (s <= 6) return 'Moderate (Sedang)';
+    if (s <= 12) return 'High (Tinggi)';
+    return 'Extreme (Sangat Tinggi)';
   }
   const $ = id => document.getElementById(id);
   const selGrading = $('grading'), chip = $('chip');
 
   function tampilChip(){
     chip.textContent = selGrading.value || '–';
-    chip.className = 'chip ' + (selGrading.value || '');
+    chip.className = 'chip ' + (selGrading.value.split(' ')[0] || '');
   }
   function autoGrading(){
     const d = +$('dampak').value, p = +$('probabilitas').value;
