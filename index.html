@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Form Insiden Keselamatan Pasien</title>
@@ -222,6 +221,10 @@
 <div style="height:30px"></div>
 
 <script>
+  // ====== PENGATURAN: URL web app Apps Script (akhiran /exec) ======
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySN8dM8jmJVaZDS93D-ZlSB-Ngk7mVDPD8eMrqlAF6_O4lkMno6ZL5GAWiIAh9Mp8MfA/exec';
+  // =================================================================
+
   // Matriks sederhana skor = dampak x probabilitas. Sesuaikan dengan matriks grading RS Anda.
   function hitungGrading(d, p){
     const s = d * p;
@@ -276,22 +279,30 @@
     data.probabilitas = teksJelas($('probabilitas'));
     data.tglWaktuInsiden = data.tglWaktuInsiden.replace('T', ' ');
 
-    const btn = $('btn'); btn.disabled = true; btn.textContent = 'Menyimpan…';
-    google.script.run
-      .withSuccessHandler(res => {
-        btn.disabled = false; btn.textContent = 'Submit';
-        n.className = 'notif ok';
-        n.textContent = 'Laporan tersimpan. ID laporan: ' + res.id;
-        $('form').reset(); tampilChip(); $('unit').value = 'Instalasi Farmasi';
-        window.scrollTo({top:0, behavior:'smooth'});
-      })
-      .withFailureHandler(err => {
-        btn.disabled = false; btn.textContent = 'Submit';
-        n.className = 'notif gagal';
-        n.textContent = 'Laporan belum tersimpan: ' + (err && err.message ? err.message : err) + '. Coba kirim lagi.';
-        window.scrollTo({top:0, behavior:'smooth'});
-      })
-      .submitInsiden(data);
+    const btn = $('btn'); btn.disabled = true; btn.textContent = 'Menyimpan… (mohon tunggu, jangan klik lagi)';
+    const selesai = () => { btn.disabled = false; btn.textContent = 'Submit'; };
+
+    // text/plain dipakai agar browser tidak mengirim preflight (CORS) ke Apps Script
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => {
+      selesai();
+      if (!res.ok) throw new Error(res.error || 'Server menolak data');
+      n.className = 'notif ok';
+      n.textContent = 'Laporan tersimpan. ID laporan: ' + res.id;
+      $('form').reset(); tampilChip(); $('unit').value = 'Instalasi Farmasi';
+      window.scrollTo({top:0, behavior:'smooth'});
+    })
+    .catch(err => {
+      selesai();
+      n.className = 'notif gagal';
+      n.textContent = 'Laporan belum tersimpan: ' + (err && err.message ? err.message : err) + '. Coba kirim lagi.';
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
   });
 </script>
 </body>
